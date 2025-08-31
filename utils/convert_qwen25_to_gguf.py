@@ -68,6 +68,37 @@ class Qwen25Converter:
         
         return config
     
+    def add_tokenizer_merges(self, writer: gguf.GGUFWriter):
+        """Add tokenizer merges for BPE tokenizers like Qwen."""
+        try:
+            # Check if tokenizer has merges
+            if hasattr(self.tokenizer, 'merges') and self.tokenizer.merges:
+                print(f"Adding {len(self.tokenizer.merges)} tokenizer merges...")
+                writer.add_token_merges(self.tokenizer.merges)
+            else:
+                # Try to load from merges.txt file
+                merges_path = self.model_path / "merges.txt"
+                if merges_path.exists():
+                    with open(merges_path, 'r', encoding='utf-8') as f:
+                        merges = []
+                        for line_num, line in enumerate(f, 1):
+                            line = line.strip()
+                            if line and not line.startswith('#'):
+                                parts = line.split()
+                                if len(parts) == 2:
+                                    merges.append(f'{parts[0]} {parts[1]}')
+                                else:
+                                    print(f"Warning: Invalid merge format at line {line_num}: {line}")
+                        if merges:
+                            print(f"Adding {len(merges)} merges from merges.txt...")
+                            writer.add_token_merges(merges)
+                        else:
+                            print("Warning: No valid merges found in merges.txt")
+                else:
+                    print("Warning: No tokenizer merges found, model may not work properly")
+        except Exception as e:
+            print(f"Warning: Could not add tokenizer merges: {e}")
+    
     def transform_to_tl1(self, x: np.ndarray):
         """Transform weights to TL1 format (2-bit quantization)."""
         scale = np.max(np.abs(x))
@@ -103,6 +134,9 @@ class Qwen25Converter:
         
         # Add tokenizer model type (required for GGUF)
         writer.add_tokenizer_model("gpt2")
+        
+        # Add tokenizer merges for BPE tokenizers (required for Qwen)
+        self.add_tokenizer_merges(writer)
         
         # Write tensors like the working scripts
         self.write_tensors(writer)
