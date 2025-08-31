@@ -99,6 +99,21 @@ class Qwen25Converter:
         except Exception as e:
             print(f"Warning: Could not add tokenizer merges: {e}")
     
+    def get_actual_vocab_size(self) -> int:
+        """Get the actual vocabulary size from the embedding tensor dimensions."""
+        try:
+            # Look for the embedding tensor in the model
+            for tensor_name, data_torch in self.get_tensors():
+                if tensor_name == "model.embed_tokens.weight":
+                    # The second dimension should be the vocabulary size
+                    vocab_size = data_torch.shape[1]
+                    print(f"Found embedding tensor with shape: {data_torch.shape}, vocab_size: {vocab_size}")
+                    return vocab_size
+            return None
+        except Exception as e:
+            print(f"Warning: Could not get actual vocabulary size: {e}")
+            return None
+    
     def transform_to_tl1(self, x: np.ndarray):
         """Transform weights to TL1 format (2-bit quantization)."""
         scale = np.max(np.abs(x))
@@ -137,6 +152,13 @@ class Qwen25Converter:
         
         # Add tokenizer merges for BPE tokenizers (required for Qwen)
         self.add_tokenizer_merges(writer)
+        
+        # Get actual vocabulary size from embedding tensor dimensions
+        actual_vocab_size = self.get_actual_vocab_size()
+        if actual_vocab_size:
+            print(f"Using actual vocabulary size from model: {actual_vocab_size}")
+            # Update the vocabulary size to match the actual model
+            writer.add_vocab_size(actual_vocab_size)
         
         # Write tensors like the working scripts
         self.write_tensors(writer)
@@ -210,7 +232,9 @@ class Qwen25Converter:
         sp.load(str(vocab_path))
         
         # Add vocabulary size
-        writer.add_vocab_size(sp.vocab_size())
+        vocab_size = sp.vocab_size()
+        print(f"Setting vocabulary size: {vocab_size}")
+        writer.add_vocab_size(vocab_size)
         
         # Add tokens, scores, and types
         tokens = []
@@ -250,7 +274,9 @@ class Qwen25Converter:
             vocab = json.load(f)
         
         # Add vocabulary size
-        writer.add_vocab_size(len(vocab))
+        vocab_size = len(vocab)
+        print(f"Setting vocabulary size: {vocab_size}")
+        writer.add_vocab_size(vocab_size)
         
         # Add tokens, scores, and types
         tokens = []
@@ -304,6 +330,7 @@ class Qwen25Converter:
                         new_name = new_name.format(bid=layer_idx)
                     
                     print(f"  Adding tensor: {tensor_name} -> {new_name}")
+                    print(f"    Original shape: {data_torch.shape}")
                     
                     # Convert data type and to numpy like the working scripts
                     old_dtype = data_torch.dtype
@@ -357,6 +384,7 @@ class Qwen25Converter:
                             print(f"    Skipping quantization for {new_name} (norm/embed/lm_head)")
                     
                     print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
+                    print(f"    Final tensor shape for {new_name}: {data.shape}")
                     writer.add_tensor(new_name, data)
         
         # Add embedding and output layers
@@ -371,6 +399,7 @@ class Qwen25Converter:
                     continue
                 
                 print(f"  Adding tensor: {tensor_name} -> {new_name}")
+                print(f"    Original shape: {data_torch.shape}")
                 
                 # Convert data type and to numpy like the working scripts
                 old_dtype = data_torch.dtype
