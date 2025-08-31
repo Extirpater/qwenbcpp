@@ -144,26 +144,30 @@ class Qwen25Converter:
         # Set GGUF parameters like the working scripts
         self.set_gguf_parameters(writer)
         
-        # Set vocabulary like the working scripts
-        self.set_vocab(writer)
-        
-        # Add tokenizer model type (required for GGUF)
-        writer.add_tokenizer_model("gpt2")
-        
-        # Add tokenizer merges for BPE tokenizers (required for Qwen)
-        self.add_tokenizer_merges(writer)
-        
-        # Get actual vocabulary size from embedding tensor dimensions
+        # Get actual vocabulary size from embedding tensor dimensions FIRST
         actual_vocab_size = self.get_actual_vocab_size()
         if actual_vocab_size:
             print(f"Model embedding tensor indicates vocabulary size: {actual_vocab_size}")
-            print(f"Tokenizers vocabulary size: 151643")
             print(f"Using model vocabulary size ({actual_vocab_size}) to match tensor dimensions")
             # Use the actual model vocabulary size to match tensor dimensions
             writer.add_vocab_size(actual_vocab_size)
         else:
-            print(f"Warning: Could not determine actual vocabulary size, using tokenizer size (151643)")
-            writer.add_vocab_size(151643)
+            # Use the tokenizer's actual vocabulary size instead of hardcoded value
+            tokenizer_vocab_size = len(self.tokenizer.get_vocab()) if hasattr(self.tokenizer, 'get_vocab') else self.tokenizer.vocab_size
+            print(f"Warning: Could not determine actual vocabulary size, using tokenizer size ({tokenizer_vocab_size})")
+            writer.add_vocab_size(tokenizer_vocab_size)
+        
+        # Add tokenizer model type (required for GGUF)
+        writer.add_tokenizer_model("gpt2")
+        
+        # Add tokenizer pre-tokenizer type (required for GGUF)
+        writer.add_tokenizer_pre("default")
+        
+        # Add tokenizer merges for BPE tokenizers (required for Qwen)
+        self.add_tokenizer_merges(writer)
+        
+        # Set vocabulary AFTER setting vocabulary size and tokenizer info
+        self.set_vocab(writer)
             
 
         
@@ -260,15 +264,9 @@ class Qwen25Converter:
         writer.add_token_scores(scores)
         writer.add_token_types(toktypes)
         
-        # Add special tokens
-        if self.tokenizer.pad_token:
-            writer.add_pad_token_id(self.tokenizer.pad_token_id)
-        if self.tokenizer.eos_token:
-            writer.add_eos_token_id(self.tokenizer.eos_token_id)
-        if self.tokenizer.bos_token:
-            writer.add_bos_token_id(self.tokenizer.bos_token_id)
-        if self.tokenizer.unk_token:
-            writer.add_unk_token_id(self.tokenizer.unk_token_id)
+        # Use GGUF SpecialVocab for proper special token handling (like working scripts)
+        special_vocab = gguf.SpecialVocab(self.model_path, n_vocab=len(tokens))
+        special_vocab.add_to_gguf(writer)
     
     def _set_vocab_gpt2(self, writer: gguf.GGUFWriter):
         """Set vocabulary using GPT2-style like the working scripts."""
@@ -282,6 +280,17 @@ class Qwen25Converter:
         # Note: vocabulary size will be set in main conversion function
         vocab_size = len(vocab)
         print(f"Tokenizers vocabulary size: {vocab_size}")
+        
+        # Ensure vocabulary size matches the expected model size
+        expected_vocab_size = 152064  # Qwen2.5-7B expected vocab size
+        if vocab_size != expected_vocab_size:
+            print(f"Warning: Tokenizer vocabulary size ({vocab_size}) doesn't match expected model size ({expected_vocab_size})")
+            print(f"Padding vocabulary to match expected size...")
+            # Pad vocabulary to match expected size
+            for i in range(vocab_size, expected_vocab_size):
+                vocab[f"[PAD{i}]"] = i
+            vocab_size = expected_vocab_size
+            print(f"Padded vocabulary size: {vocab_size}")
         
         # Add tokens, scores, and types
         tokens = []
@@ -300,15 +309,9 @@ class Qwen25Converter:
         writer.add_token_scores(scores)
         writer.add_token_types(toktypes)
         
-        # Add special tokens
-        if self.tokenizer.pad_token:
-            writer.add_pad_token_id(self.tokenizer.pad_token_id)
-        if self.tokenizer.eos_token:
-            writer.add_eos_token_id(self.tokenizer.eos_token_id)
-        if self.tokenizer.bos_token:
-            writer.add_bos_token_id(self.tokenizer.bos_token_id)
-        if self.tokenizer.unk_token:
-            writer.add_unk_token_id(self.tokenizer.unk_token_id)
+        # Use GGUF SpecialVocab for proper special token handling (like working scripts)
+        special_vocab = gguf.SpecialVocab(self.model_path, n_vocab=len(tokens))
+        special_vocab.add_to_gguf(writer)
     
     def write_tensors(self, writer: gguf.GGUFWriter):
         """Write tensors following the same pattern as working scripts."""
