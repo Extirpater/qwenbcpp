@@ -284,9 +284,9 @@ class Qwen25Converter:
                         data = data.astype(np.float32)
                     
                     # Apply TL1/TL2 quantization if requested
-                    if self.quant_type in ["tl1", "tl2"] and name.endswith(".weight") and len(data.shape) >= 2:
+                    if self.quant_type in ["tl1", "tl2"] and tensor_name.endswith(".weight") and len(data.shape) >= 2:
                         # Skip certain tensors that shouldn't be quantized
-                        if not any(name.endswith(skip) for skip in ["norm.weight", "embed_tokens.weight", "lm_head.weight"]):
+                        if not any(tensor_name.endswith(skip) for skip in ["norm.weight", "embed_tokens.weight", "lm_head.weight"]):
                             if self.quant_type == "tl1":
                                 data, scale = self.transform_to_tl1(data)
                                 print(f"    TL1 quantized: {old_dtype} -> {data.dtype}, scale: {scale}, shape: {data.shape}")
