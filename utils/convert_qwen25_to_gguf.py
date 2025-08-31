@@ -120,10 +120,25 @@ class Qwen25Converter:
         # Add vocabulary size
         writer.add_vocab_size(len(vocab))
         
-        # Add tokens as a list
-        tokens = list(vocab.keys())
-        token_ids = list(vocab.values())
-        writer.add_token_list(tokens, token_ids)
+        # Prepare tokens, scores, and types
+        tokens = []
+        scores = []
+        toktypes = []
+        
+        # Sort vocabulary by token ID to ensure correct ordering
+        sorted_vocab = sorted(vocab.items(), key=lambda x: x[1])
+        
+        for token, token_id in sorted_vocab:
+            tokens.append(token)
+            # Use default score of 0.0 for all tokens
+            scores.append(0.0)
+            # Use normal token type for all tokens
+            toktypes.append(1)  # 1 = NORMAL token type
+        
+        # Add tokens, scores, and types
+        writer.add_token_list(tokens)
+        writer.add_token_scores(scores)
+        writer.add_token_types(toktypes)
         
         # Add special tokens
         if self.tokenizer.pad_token:
