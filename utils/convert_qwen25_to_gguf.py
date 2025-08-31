@@ -153,12 +153,14 @@ class Qwen25Converter:
         # Add tokenizer merges for BPE tokenizers (required for Qwen)
         self.add_tokenizer_merges(writer)
         
-        # Get actual vocabulary size from embedding tensor dimensions for verification
+        # Get actual vocabulary size from embedding tensor dimensions
         actual_vocab_size = self.get_actual_vocab_size()
         if actual_vocab_size:
             print(f"Model embedding tensor indicates vocabulary size: {actual_vocab_size}")
             print(f"Tokenizers vocabulary size: 151643")
-            print(f"Using tokenizer vocabulary size (151643) as it's more accurate")
+            print(f"Using actual model vocabulary size ({actual_vocab_size}) to match tensor dimensions")
+            # Update the vocabulary size to match the actual model
+            writer.add_vocab_size(actual_vocab_size)
         
         # Write tensors like the working scripts
         self.write_tensors(writer)
@@ -347,6 +349,14 @@ class Qwen25Converter:
                             data_torch = data_torch.squeeze(-1)
                         while len(data_torch.shape) > 2 and data_torch.shape[-2] == 1:
                             data_torch = data_torch.squeeze(-2)
+                        
+                        # Special handling for embedding tensor to ensure correct vocabulary size
+                        if tensor_name == "model.embed_tokens.weight":
+                            # The embedding tensor should have shape (vocab_size, hidden_size)
+                            # If it has more dimensions, we need to reshape it
+                            if len(data_torch.shape) > 2:
+                                print(f"    Reshaping embedding tensor from {data_torch.shape} to ({data_torch.shape[0]}, {data_torch.shape[1]})")
+                                data_torch = data_torch.view(data_torch.shape[0], data_torch.shape[1])
                     else:
                         # For other tensors, use normal squeeze
                         data_torch = data_torch.squeeze()
@@ -416,6 +426,14 @@ class Qwen25Converter:
                         data_torch = data_torch.squeeze(-1)
                     while len(data_torch.shape) > 2 and data_torch.shape[-2] == 1:
                         data_torch = data_torch.squeeze(-2)
+                    
+                    # Special handling for embedding tensor to ensure correct vocabulary size
+                    if tensor_name == "model.embed_tokens.weight":
+                        # The embedding tensor should have shape (vocab_size, hidden_size)
+                        # If it has more dimensions, we need to reshape it
+                        if len(data_torch.shape) > 2:
+                            print(f"    Reshaping embedding tensor from {data_torch.shape} to ({data_torch.shape[0]}, {data_torch.shape[1]})")
+                            data_torch = data_torch.view(data_torch.shape[0], data_torch.shape[1])
                 else:
                     # For other tensors, use normal squeeze
                     data_torch = data_torch.squeeze()
