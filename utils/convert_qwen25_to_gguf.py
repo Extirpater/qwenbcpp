@@ -157,6 +157,8 @@ class Qwen25Converter:
             print(f"Warning: Could not determine actual vocabulary size, using tokenizer size ({tokenizer_vocab_size})")
             writer.add_vocab_size(tokenizer_vocab_size)
         
+
+        
         # Add tokenizer model type (required for GGUF)
         writer.add_tokenizer_model("gpt2")
         
@@ -242,23 +244,25 @@ class Qwen25Converter:
         sp = spm.SentencePieceProcessor()
         sp.load(str(vocab_path))
         
-        # Note: vocabulary size will be set in main conversion function
-        vocab_size = sp.vocab_size()
-        print(f"Tokenizers vocabulary size: {vocab_size}")
+        # Get the expected vocabulary size from the model
+        expected_vocab_size = 152064  # Qwen2.5-7B expected vocab size
+        print(f"Expected model vocabulary size: {expected_vocab_size}")
+        print(f"Tokenizers vocabulary size: {sp.vocab_size()}")
         
-        # Add tokens, scores, and types
-        tokens = []
-        scores = []
-        toktypes = []
+        # Pre-allocate the full vocabulary size with PAD tokens (like working scripts)
+        tokens = [f"[PAD{i}]" for i in range(expected_vocab_size)]
+        scores = [-10000.0] * expected_vocab_size
+        toktypes = [1] * expected_vocab_size  # NORMAL token type
         
+        # Fill in the real tokens from the tokenizer
         for i in range(sp.vocab_size()):
             token = sp.id_to_piece(i)
             score = sp.get_score(i)
             toktype = 1  # NORMAL token type
             
-            tokens.append(token)
-            scores.append(score)
-            toktypes.append(toktype)
+            tokens[i] = token
+            scores[i] = score
+            toktypes[i] = toktype
         
         writer.add_token_list(tokens)
         writer.add_token_scores(scores)
@@ -277,33 +281,23 @@ class Qwen25Converter:
         with open(vocab_path, 'r') as f:
             vocab = json.load(f)
         
-        # Note: vocabulary size will be set in main conversion function
-        vocab_size = len(vocab)
-        print(f"Tokenizers vocabulary size: {vocab_size}")
-        
-        # Ensure vocabulary size matches the expected model size
+        # Get the expected vocabulary size from the model
         expected_vocab_size = 152064  # Qwen2.5-7B expected vocab size
-        if vocab_size != expected_vocab_size:
-            print(f"Warning: Tokenizer vocabulary size ({vocab_size}) doesn't match expected model size ({expected_vocab_size})")
-            print(f"Padding vocabulary to match expected size...")
-            # Pad vocabulary to match expected size
-            for i in range(vocab_size, expected_vocab_size):
-                vocab[f"[PAD{i}]"] = i
-            vocab_size = expected_vocab_size
-            print(f"Padded vocabulary size: {vocab_size}")
+        print(f"Expected model vocabulary size: {expected_vocab_size}")
+        print(f"Tokenizers vocabulary size: {len(vocab)}")
         
-        # Add tokens, scores, and types
-        tokens = []
-        scores = []
-        toktypes = []
+        # Pre-allocate the full vocabulary size with PAD tokens (like working scripts)
+        tokens = [f"[PAD{i}]" for i in range(expected_vocab_size)]
+        scores = [-10000.0] * expected_vocab_size
+        toktypes = [1] * expected_vocab_size  # NORMAL token type
         
-        # Sort vocabulary by token ID to ensure correct ordering
+        # Fill in the real tokens from the tokenizer
         sorted_vocab = sorted(vocab.items(), key=lambda x: x[1])
-        
         for token, token_id in sorted_vocab:
-            tokens.append(token)
-            scores.append(0.0)  # Default score
-            toktypes.append(1)  # NORMAL token type
+            if token_id < expected_vocab_size:
+                tokens[token_id] = token
+                scores[token_id] = 0.0  # Default score
+                toktypes[token_id] = 1  # NORMAL token type
         
         writer.add_token_list(tokens)
         writer.add_token_scores(scores)
