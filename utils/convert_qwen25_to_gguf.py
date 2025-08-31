@@ -121,23 +121,20 @@ class Qwen25Converter:
         # Create GGUF writer
         writer = gguf.GGUFWriter(self.output_path, "qwen2.5-bitnet")
         
-        # Add model metadata
+        # Add model metadata using correct GGUF API methods
         writer.add_name("qwen2.5-bitnet")
-        writer.add_description("Qwen2.5 model converted for BitNet LUT inference")
-        writer.add_model_family("qwen")
-        writer.add_model_type("qwen2.5")
-        writer.add_file_type(gguf.FileType.F16)
         
         # Add architecture info
-        writer.add_architecture("qwen2.5")
         writer.add_context_length(self.config.max_position_embeddings)
         writer.add_embedding_length(self.config.hidden_size)
         writer.add_block_count(self.config.num_hidden_layers)
         writer.add_feed_forward_length(self.config.intermediate_size)
-        writer.add_rope_dimension_count(self.config.hidden_size // self.config.num_attention_heads)
-        writer.add_attention_head_count(self.config.num_attention_heads)
-        writer.add_attention_head_count_kv(self.config.num_key_value_heads)
+        writer.add_head_count(self.config.num_attention_heads)
+        writer.add_head_count_kv(self.config.num_key_value_heads)
         writer.add_layer_norm_rms_eps(self.config.rms_norm_eps)
+        
+        # Add file type
+        writer.add_file_type(gguf.FileType.F16)
         
         # Add vocabulary
         self._add_vocab(writer)
@@ -149,6 +146,7 @@ class Qwen25Converter:
         writer.write_header_to_file()
         writer.write_kv_data_to_file()
         writer.write_tensors_to_file()
+        writer.close()
         
         print(f"Model converted successfully to {self.output_path}")
     
