@@ -313,7 +313,18 @@ class Qwen25Converter:
                         data_torch = data_torch.to(torch.float32)
                     
                     # Convert to numpy and add like the working scripts
-                    data = data_torch.squeeze().numpy()
+                    # Be careful about squeezing - only remove trailing 1s for certain tensors
+                    if tensor_name.endswith((".weight", ".bias")):
+                        # For weight/bias tensors, remove trailing 1s but preserve the main dimensions
+                        while len(data_torch.shape) > 2 and data_torch.shape[-1] == 1:
+                            data_torch = data_torch.squeeze(-1)
+                        while len(data_torch.shape) > 2 and data_torch.shape[-2] == 1:
+                            data_torch = data_torch.squeeze(-2)
+                    else:
+                        # For other tensors, use normal squeeze
+                        data_torch = data_torch.squeeze()
+                    
+                    data = data_torch.numpy()
                     
                     # Handle data type conversion like the working scripts
                     if data.dtype == np.float16:
@@ -369,7 +380,18 @@ class Qwen25Converter:
                     data_torch = data_torch.to(torch.float32)
                 
                 # Convert to numpy and add like the working scripts
-                data = data_torch.squeeze().numpy()
+                # Be careful about squeezing - only remove trailing 1s for certain tensors
+                if tensor_name.endswith((".weight", ".bias")):
+                    # For weight/bias tensors, remove trailing 1s but preserve the main dimensions
+                    while len(data_torch.shape) > 2 and data_torch.shape[-1] == 1:
+                        data_torch = data_torch.squeeze(-1)
+                    while len(data_torch.shape) > 2 and data_torch.shape[-2] == 1:
+                        data_torch = data_torch.squeeze(-2)
+                else:
+                    # For other tensors, use normal squeeze
+                    data_torch = data_torch.squeeze()
+                
+                data = data_torch.numpy()
                 
                 # Handle data type conversion like the working scripts
                 if data.dtype == np.float16:
