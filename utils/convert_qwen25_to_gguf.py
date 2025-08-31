@@ -83,6 +83,7 @@ class Qwen25Converter:
         
         # Add model metadata using correct GGUF API methods
         writer.add_name("qwen2.5-bitnet")
+        writer.add_architecture("qwen2")
         
         # Add architecture info
         writer.add_context_length(self.config.max_position_embeddings)
@@ -117,17 +118,23 @@ class Qwen25Converter:
         # Get vocabulary
         vocab = self.tokenizer.get_vocab()
         
-        # Add tokens
-        for token, token_id in vocab.items():
-            writer.add_token(token, token_id)
+        # Add vocabulary size
+        writer.add_vocab_size(len(vocab))
+        
+        # Add tokens as a list
+        tokens = list(vocab.keys())
+        token_ids = list(vocab.values())
+        writer.add_token_list(tokens, token_ids)
         
         # Add special tokens
         if self.tokenizer.pad_token:
-            writer.add_token_id(self.tokenizer.pad_token_id)
+            writer.add_pad_token_id(self.tokenizer.pad_token_id)
         if self.tokenizer.eos_token:
-            writer.add_token_id(self.tokenizer.eos_token_id)
+            writer.add_eos_token_id(self.tokenizer.eos_token_id)
         if self.tokenizer.bos_token:
-            writer.add_token_id(self.tokenizer.bos_token_id)
+            writer.add_bos_token_id(self.tokenizer.bos_token_id)
+        if self.tokenizer.unk_token:
+            writer.add_unk_token_id(self.tokenizer.unk_token_id)
     
     def _add_tensors(self, writer: gguf.GGUFWriter):
         """Add model tensors to the GGUF file."""
@@ -141,10 +148,10 @@ class Qwen25Converter:
             
             # Attention weights
             for tensor_name, gguf_name in tensor_mapping.items():
-                if "{bid}" in tensor_name:
+                if "{}" in tensor_name:
                     # Layer-specific tensors
-                    actual_name = tensor_name.format(bid=layer_idx)
-                    gguf_actual_name = gguf_name.format(bid=layer_idx)
+                    actual_name = tensor_name.format(layer_idx)
+                    gguf_actual_name = gguf_name.format(layer_idx)
                     
                     if actual_name in self.model.state_dict():
                         tensor = self.model.state_dict()[actual_name]
