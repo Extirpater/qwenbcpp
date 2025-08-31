@@ -356,10 +356,11 @@ class Qwen25Converter:
                         # Special handling for embedding tensor to ensure correct vocabulary size
                         if tensor_name == "model.embed_tokens.weight":
                             # The embedding tensor should have shape (vocab_size, hidden_size)
-                            # If it has more dimensions, we need to reshape it
-                            if len(data_torch.shape) > 2:
+                            # Always ensure it's 2D regardless of original shape
+                            if len(data_torch.shape) != 2:
                                 print(f"    Reshaping embedding tensor from {data_torch.shape} to ({data_torch.shape[0]}, {data_torch.shape[1]})")
                                 data_torch = data_torch.view(data_torch.shape[0], data_torch.shape[1])
+                            print(f"    Final embedding tensor shape: {data_torch.shape}")
                     else:
                         # For other tensors, use normal squeeze
                         data_torch = data_torch.squeeze()
