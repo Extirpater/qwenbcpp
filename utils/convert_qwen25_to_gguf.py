@@ -94,7 +94,7 @@ class Qwen25Converter:
         writer.add_layer_norm_rms_eps(self.config.rms_norm_eps)
         
         # Add file type
-        writer.add_file_type(gguf.LlamaFileType.ALL_F32)
+        writer.add_file_type(gguf.LlamaFileType.MOSTLY_F16)
         
         # Add vocabulary
         self._add_vocab(writer)

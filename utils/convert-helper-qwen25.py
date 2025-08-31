@@ -47,6 +47,7 @@ def main():
 
     convert_script = utils_dir / "convert_qwen25_to_gguf.py"
     llama_quantize_binary = project_root_dir / "build" / "bin" / "llama-quantize"
+    bitnet_convert_script = utils_dir / "convert-hf-to-gguf-bitnet.py"
 
     # Check if required files exist
     if not convert_script.is_file():
@@ -55,33 +56,47 @@ def main():
     if not llama_quantize_binary.is_file():
         print(f"Error: llama-quantize binary not found at '{llama_quantize_binary}'")
         sys.exit(1)
+    if not bitnet_convert_script.is_file():
+        print(f"Error: BitNet conversion script not found at '{bitnet_convert_script}'")
+        sys.exit(1)
 
     # Output file names
-    gguf_f32_output = model_dir / "ggml-model-f32-qwen25.gguf"
+    gguf_f16_output = model_dir / "ggml-model-f16-qwen25.gguf"
     gguf_quantized_output = model_dir / f"ggml-model-{quant_type}-qwen25.gguf"
 
     try:
-        print("Converting Qwen2.5 model to GGUF (f32)...")
+        print("Converting Qwen2.5 model to GGUF (f16)...")
         cmd_convert = [
             sys.executable,
             str(convert_script),
             str(model_dir),
-            "--output", str(gguf_f32_output)
+            "--output", str(gguf_f16_output)
         ]
         run_command(cmd_convert)
 
-        print(f"Quantizing model to {quant_type.upper()}...")
-        cmd_quantize = [
-            str(llama_quantize_binary),
-            str(gguf_f32_output),
-            str(gguf_quantized_output),
-            quant_type.upper(),
-            "1"
-        ]
-        run_command(cmd_quantize)
+        if quant_type in ["tl1", "tl2"]:
+            # Use custom BitNet conversion script for TL1/TL2
+            print(f"Quantizing model to {quant_type.upper()} using BitNet conversion...")
+            cmd_quantize = [
+                sys.executable,
+                str(bitnet_convert_script),
+                str(model_dir),
+                "--outtype", quant_type,
+                "--outfile", str(gguf_quantized_output)
+            ]
+        else:
+            # Use standard llama-quantize for other quantization types
+            print(f"Quantizing model to {quant_type.upper()}...")
+            cmd_quantize = [
+                str(llama_quantize_binary),
+                str(gguf_f16_output),
+                str(gguf_quantized_output),
+                quant_type.upper(),
+                "1"
+            ]
 
         print("Conversion completed successfully!")
-        print(f"F32 model: {gguf_f32_output}")
+        print(f"F16 model: {gguf_f16_output}")
         print(f"Quantized model: {gguf_quantized_output}")
 
     except Exception as e:
@@ -89,12 +104,12 @@ def main():
         sys.exit(1)
     finally:
         print("Cleaning up intermediate files...")
-        if gguf_f32_output.exists():
-            print(f"Removing f32 GGUF: {gguf_f32_output}")
+        if gguf_f16_output.exists():
+            print(f"Removing f16 GGUF: {gguf_f16_output}")
             try:
-                gguf_f32_output.unlink()
+                gguf_f16_output.unlink()
             except OSError as e:
-                print(f"Warning: Could not remove {gguf_f32_output}: {e}")
+                print(f"Warning: Could not remove {gguf_f16_output}: {e}")
 
 if __name__ == "__main__":
     main()
