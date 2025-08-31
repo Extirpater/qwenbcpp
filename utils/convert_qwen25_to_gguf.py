@@ -83,7 +83,6 @@ class Qwen25Converter:
         
         # Add model metadata using correct GGUF API methods
         writer.add_name("qwen2.5-bitnet")
-        writer.add_architecture("qwen2")
         
         # Add architecture info
         writer.add_context_length(self.config.max_position_embeddings)
@@ -155,19 +154,33 @@ class Qwen25Converter:
                     
                     if actual_name in self.model.state_dict():
                         tensor = self.model.state_dict()[actual_name]
+                        print(f"  Adding tensor: {actual_name} -> {gguf_actual_name}")
                         
                         # Add weights in F32 format (quantization will be handled by llama-quantize)
                         writer.add_tensor(gguf_actual_name, tensor.numpy())
+                    else:
+                        print(f"  Warning: Tensor {actual_name} not found in model state dict")
         
         # Add embedding and output layers
+        print("Adding embedding and output layers...")
+        
         if "model.embed_tokens.weight" in self.model.state_dict():
+            print("  Adding token_embd.weight")
             writer.add_tensor("token_embd.weight", self.model.state_dict()["model.embed_tokens.weight"].numpy())
+        else:
+            print("  Warning: model.embed_tokens.weight not found")
         
         if "model.norm.weight" in self.model.state_dict():
+            print("  Adding output_norm.weight")
             writer.add_tensor("output_norm.weight", self.model.state_dict()["model.norm.weight"].numpy())
+        else:
+            print("  Warning: model.norm.weight not found")
         
         if "lm_head.weight" in self.model.state_dict():
+            print("  Adding output.weight")
             writer.add_tensor("output.weight", self.model.state_dict()["lm_head.weight"].numpy())
+        else:
+            print("  Warning: lm_head.weight not found")
 
 def main():
     parser = argparse.ArgumentParser(description="Convert Qwen2.5 models to GGUF format for BitNet LUT inference")
