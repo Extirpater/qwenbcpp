@@ -101,6 +101,9 @@ class Qwen25Converter:
         # Set vocabulary like the working scripts
         self.set_vocab(writer)
         
+        # Add tokenizer model type (required for GGUF)
+        writer.add_tokenizer_model("gpt2")
+        
         # Write tensors like the working scripts
         self.write_tensors(writer)
         
@@ -293,17 +296,22 @@ class Qwen25Converter:
                                 # Add scale tensor
                                 scale_name = new_name + "_scale"
                                 writer.add_tensor(scale_name, scale)
+                                # Use proper GGUF quantization type
+                                writer.add_tensor(new_name, data, raw_dtype=gguf.GGMLQuantizationType.TL1)
+                                continue  # Skip the default add_tensor below
                             elif self.quant_type == "tl2":
                                 data, scale = self.transform_to_tl2(data)
                                 print(f"    TL2 quantized: {old_dtype} -> {data.dtype}, scale: {scale}, shape: {data.shape}")
                                 # Add scale tensor
                                 scale_name = new_name + "_scale"
                                 writer.add_tensor(scale_name, scale)
+                                # Use proper GGUF quantization type
+                                writer.add_tensor(new_name, data, raw_dtype=gguf.GGMLQuantizationType.TL2)
+                                continue  # Skip the default add_tensor below
                         else:
                             print(f"    Skipping quantization for {new_name} (norm/embed/lm_head)")
-                    else:
-                        print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
                     
+                    print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
                     writer.add_tensor(new_name, data)
         
         # Add embedding and output layers
@@ -344,17 +352,22 @@ class Qwen25Converter:
                             # Add scale tensor
                             scale_name = new_name + "_scale"
                             writer.add_tensor(scale_name, scale)
+                            # Use proper GGUF quantization type
+                            writer.add_tensor(new_name, data, raw_dtype=gguf.GGMLQuantizationType.TL1)
+                            continue  # Skip the default add_tensor below
                         elif self.quant_type == "tl2":
                             data, scale = self.transform_to_tl2(data)
                             print(f"    TL2 quantized: {old_dtype} -> {data.dtype}, scale: {scale}, shape: {data.shape}")
                             # Add scale tensor
                             scale_name = new_name + "_scale"
                             writer.add_tensor(scale_name, scale)
+                            # Use proper GGUF quantization type
+                            writer.add_tensor(new_name, data, raw_dtype=gguf.GGMLQuantizationType.TL2)
+                            continue  # Skip the default add_tensor below
                     else:
                         print(f"    Skipping quantization for {new_name} (norm/embed/lm_head)")
-                else:
-                    print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
                 
+                print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
                 writer.add_tensor(new_name, data)
     
     def get_tensors(self) -> Iterable[tuple[str, torch.Tensor]]:
