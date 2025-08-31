@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Convert Qwen2.5 models to GGUF format compatible with BitNet LUT kernels.
-This script handles the conversion of Qwen2.5 models to work with the BitNet.cpp framework.
+This script follows the exact same pattern as the working BitNet conversion scripts.
 """
 
 import argparse
@@ -9,7 +9,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Iterable
 
 import torch
 import numpy as np
@@ -21,7 +21,7 @@ sys.path.insert(1, str(Path(__file__).parent.parent / "3rdparty" / "llama.cpp" /
 import gguf
 
 class Qwen25Converter:
-    """Convert Qwen2.5 models to GGUF format with BitNet LUT support."""
+    """Convert Qwen2.5 models to GGUF format following the same pattern as working BitNet scripts."""
     
     def __init__(self, model_path: str, output_path: str):
         self.model_path = Path(model_path)
@@ -29,6 +29,7 @@ class Qwen25Converter:
         self.model = None
         self.tokenizer = None
         self.config = None
+        self.hparams = None
         
     def load_model(self):
         """Load the Qwen2.5 model and tokenizer."""
@@ -43,64 +44,44 @@ class Qwen25Converter:
                 trust_remote_code=True
             )
             self.config = self.model.config
+            
+            # Load hparams like the working scripts do
+            self.hparams = self.load_hparams()
+            
             print(f"Model loaded successfully: {self.config.model_type}")
         except Exception as e:
             print(f"Error loading model: {e}")
             sys.exit(1)
     
-    def get_tensor_mapping(self) -> Dict[str, str]:
-        """Get the tensor mapping for Qwen2.5 architecture."""
-        return {
-            # Embeddings
-            "model.embed_tokens.weight": "token_embd.weight",
-            
-            # Output layer
-            "model.norm.weight": "output_norm.weight",
-            "lm_head.weight": "output.weight",
-            
-            # Layer mappings
-            "model.layers.{}.input_layernorm.weight": "blk.{}.attn_norm.weight",
-            "model.layers.{}.self_attn.q_proj.weight": "blk.{}.attn_q.weight",
-            "model.layers.{}.self_attn.k_proj.weight": "blk.{}.attn_k.weight",
-            "model.layers.{}.self_attn.v_proj.weight": "blk.{}.attn_v.weight",
-            "model.layers.{}.self_attn.o_proj.weight": "blk.{}.attn_output.weight",
-            
-            # MLP mappings
-            "model.layers.{}.mlp.gate_proj.weight": "blk.{}.ffn_gate.weight",
-            "model.layers.{}.mlp.up_proj.weight": "blk.{}.ffn_up.weight",
-            "model.layers.{}.mlp.down_proj.weight": "blk.{}.ffn_down.weight",
-            "model.layers.{}.post_attention_layernorm.weight": "blk.{}.ffn_norm.weight",
-        }
-    
-
+    def load_hparams(self) -> Dict[str, Any]:
+        """Load model hyperparameters from config.json."""
+        config_path = self.model_path / "config.json"
+        if not config_path.exists():
+            raise FileNotFoundError(f"config.json not found at {config_path}")
+        
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+        
+        # Add architecture info like the working scripts
+        config["architectures"] = ["Qwen2ForCausalLM"]
+        
+        return config
     
     def convert_model(self):
         """Convert the model to GGUF format."""
         print("Starting model conversion...")
         
-        # Create GGUF writer
-        writer = gguf.GGUFWriter(self.output_path, "qwen2.5-bitnet")
+        # Create GGUF writer using the same pattern as working scripts
+        writer = gguf.GGUFWriter(self.output_path, gguf.MODEL_ARCH_NAMES[gguf.MODEL_ARCH.QWEN2])
         
-        # Add model metadata using correct GGUF API methods
-        writer.add_name("qwen2.5-bitnet")
+        # Set GGUF parameters like the working scripts
+        self.set_gguf_parameters(writer)
         
-        # Add architecture info
-        writer.add_context_length(self.config.max_position_embeddings)
-        writer.add_embedding_length(self.config.hidden_size)
-        writer.add_block_count(self.config.num_hidden_layers)
-        writer.add_feed_forward_length(self.config.intermediate_size)
-        writer.add_head_count(self.config.num_attention_heads)
-        writer.add_head_count_kv(self.config.num_key_value_heads)
-        writer.add_layer_norm_rms_eps(self.config.rms_norm_eps)
+        # Set vocabulary like the working scripts
+        self.set_vocab(writer)
         
-        # Add file type
-        writer.add_file_type(gguf.LlamaFileType.MOSTLY_F16)
-        
-        # Add vocabulary
-        self._add_vocab(writer)
-        
-        # Add tensors
-        self._add_tensors(writer)
+        # Write tensors like the working scripts
+        self.write_tensors(writer)
         
         # Write the model
         writer.write_header_to_file()
@@ -110,32 +91,83 @@ class Qwen25Converter:
         
         print(f"Model converted successfully to {self.output_path}")
     
-    def _add_vocab(self, writer: gguf.GGUFWriter):
-        """Add vocabulary to the GGUF file."""
-        print("Adding vocabulary...")
+    def set_gguf_parameters(self, writer: gguf.GGUFWriter):
+        """Set GGUF parameters following the same pattern as working scripts."""
+        writer.add_name(self.model_path.name)
+        writer.add_block_count(self.config.num_hidden_layers)
         
-        # Get vocabulary
-        vocab = self.tokenizer.get_vocab()
+        if hasattr(self.config, 'max_position_embeddings'):
+            writer.add_context_length(self.config.max_position_embeddings)
+            print(f"gguf: context length = {self.config.max_position_embeddings}")
+        
+        writer.add_embedding_length(self.config.hidden_size)
+        print(f"gguf: embedding length = {self.config.hidden_size}")
+        
+        if hasattr(self.config, 'intermediate_size'):
+            writer.add_feed_forward_length(self.config.intermediate_size)
+            print(f"gguf: feed forward length = {self.config.intermediate_size}")
+        
+        writer.add_head_count(self.config.num_attention_heads)
+        print(f"gguf: head count = {self.config.num_attention_heads}")
+        
+        if hasattr(self.config, 'num_key_value_heads'):
+            writer.add_head_count_kv(self.config.num_key_value_heads)
+            print(f"gguf: key-value head count = {self.config.num_key_value_heads}")
+        
+        if hasattr(self.config, 'rope_theta'):
+            writer.add_rope_freq_base(self.config.rope_theta)
+            print(f"gguf: rope theta = {self.config.rope_theta}")
+        
+        if hasattr(self.config, 'rms_norm_eps'):
+            writer.add_layer_norm_rms_eps(self.config.rms_norm_eps)
+            print(f"gguf: rms norm epsilon = {self.config.rms_norm_eps}")
+        
+        # Set file type to F16 like the working scripts
+        writer.add_file_type(gguf.GGMLQuantizationType.F16)
+        print(f"gguf: file type = F16")
+    
+    def set_vocab(self, writer: gguf.GGUFWriter):
+        """Set vocabulary following the same pattern as working scripts."""
+        print("Setting vocabulary...")
+        
+        try:
+            # Try sentencepiece first like the working scripts
+            self._set_vocab_sentencepiece(writer)
+        except FileNotFoundError:
+            try:
+                # Fall back to GPT2-style like the working scripts
+                self._set_vocab_gpt2(writer)
+            except Exception as e:
+                print(f"Error setting vocabulary: {e}")
+                sys.exit(1)
+    
+    def _set_vocab_sentencepiece(self, writer: gguf.GGUFWriter):
+        """Set vocabulary using sentencepiece like the working scripts."""
+        vocab_path = self.model_path / "tokenizer.model"
+        if not vocab_path.exists():
+            raise FileNotFoundError(f"tokenizer.model not found at {vocab_path}")
+        
+        import sentencepiece as spm
+        sp = spm.SentencePieceProcessor()
+        sp.load(str(vocab_path))
         
         # Add vocabulary size
-        writer.add_vocab_size(len(vocab))
+        writer.add_vocab_size(sp.vocab_size())
         
-        # Prepare tokens, scores, and types
+        # Add tokens, scores, and types
         tokens = []
         scores = []
         toktypes = []
         
-        # Sort vocabulary by token ID to ensure correct ordering
-        sorted_vocab = sorted(vocab.items(), key=lambda x: x[1])
-        
-        for token, token_id in sorted_vocab:
+        for i in range(sp.vocab_size()):
+            token = sp.id_to_piece(i)
+            score = sp.get_score(i)
+            toktype = 1  # NORMAL token type
+            
             tokens.append(token)
-            # Use default score of 0.0 for all tokens
-            scores.append(0.0)
-            # Use normal token type for all tokens
-            toktypes.append(1)  # 1 = NORMAL token type
+            scores.append(score)
+            toktypes.append(toktype)
         
-        # Add tokens, scores, and types
         writer.add_token_list(tokens)
         writer.add_token_scores(scores)
         writer.add_token_types(toktypes)
@@ -150,52 +182,110 @@ class Qwen25Converter:
         if self.tokenizer.unk_token:
             writer.add_unk_token_id(self.tokenizer.unk_token_id)
     
-    def _add_tensors(self, writer: gguf.GGUFWriter):
-        """Add model tensors to the GGUF file."""
-        print("Adding model tensors...")
+    def _set_vocab_gpt2(self, writer: gguf.GGUFWriter):
+        """Set vocabulary using GPT2-style like the working scripts."""
+        vocab_path = self.model_path / "vocab.json"
+        if not vocab_path.exists():
+            raise FileNotFoundError(f"vocab.json not found at {vocab_path}")
         
-        tensor_mapping = self.get_tensor_mapping()
+        with open(vocab_path, 'r') as f:
+            vocab = json.load(f)
         
-        # Process each layer
+        # Add vocabulary size
+        writer.add_vocab_size(len(vocab))
+        
+        # Add tokens, scores, and types
+        tokens = []
+        scores = []
+        toktypes = []
+        
+        # Sort vocabulary by token ID to ensure correct ordering
+        sorted_vocab = sorted(vocab.items(), key=lambda x: x[1])
+        
+        for token, token_id in sorted_vocab:
+            tokens.append(token)
+            scores.append(0.0)  # Default score
+            toktypes.append(1)  # NORMAL token type
+        
+        writer.add_token_list(tokens)
+        writer.add_token_scores(scores)
+        writer.add_token_types(toktypes)
+        
+        # Add special tokens
+        if self.tokenizer.pad_token:
+            writer.add_pad_token_id(self.tokenizer.pad_token_id)
+        if self.tokenizer.eos_token:
+            writer.add_eos_token_id(self.tokenizer.eos_token_id)
+        if self.tokenizer.bos_token:
+            writer.add_bos_token_id(self.tokenizer.bos_token_id)
+        if self.tokenizer.unk_token:
+            writer.add_unk_token_id(self.tokenizer.unk_token_id)
+    
+    def write_tensors(self, writer: gguf.GGUFWriter):
+        """Write tensors following the same pattern as working scripts."""
+        print("Writing tensors...")
+        
+        # Get tensor mapping using the same method as working scripts
+        tensor_map = gguf.get_tensor_name_map(gguf.MODEL_ARCH.QWEN2, self.config.num_hidden_layers)
+        
+        # Process each layer like the working scripts
         for layer_idx in range(self.config.num_hidden_layers):
             print(f"Processing layer {layer_idx}...")
             
-            # Attention weights
-            for tensor_name, gguf_name in tensor_mapping.items():
-                if "{}" in tensor_name:
-                    # Layer-specific tensors
-                    actual_name = tensor_name.format(layer_idx)
-                    gguf_actual_name = gguf_name.format(layer_idx)
+            # Get all tensors for this layer
+            for tensor_name, data_torch in self.get_tensors():
+                if f"layers.{layer_idx}." in tensor_name:
+                    # Map tensor name using the same method as working scripts
+                    new_name = tensor_map.get_name(tensor_name, try_suffixes=(".weight", ".bias"))
+                    if new_name is None:
+                        print(f"  Warning: Could not map tensor {tensor_name}")
+                        continue
                     
-                    if actual_name in self.model.state_dict():
-                        tensor = self.model.state_dict()[actual_name]
-                        print(f"  Adding tensor: {actual_name} -> {gguf_actual_name}")
-                        
-                        # Add weights in F32 format (quantization will be handled by llama-quantize)
-                        writer.add_tensor(gguf_actual_name, tensor.numpy())
-                    else:
-                        print(f"  Warning: Tensor {actual_name} not found in model state dict")
+                    # Format the bid placeholder like the working scripts
+                    if "{bid}" in new_name:
+                        new_name = new_name.format(bid=layer_idx)
+                    
+                    print(f"  Adding tensor: {tensor_name} -> {new_name}")
+                    
+                    # Convert to numpy and add like the working scripts
+                    data = data_torch.squeeze().numpy()
+                    writer.add_tensor(new_name, data)
         
         # Add embedding and output layers
         print("Adding embedding and output layers...")
         
-        if "model.embed_tokens.weight" in self.model.state_dict():
-            print("  Adding token_embd.weight")
-            writer.add_tensor("token_embd.weight", self.model.state_dict()["model.embed_tokens.weight"].numpy())
-        else:
-            print("  Warning: model.embed_tokens.weight not found")
+        for tensor_name, data_torch in self.get_tensors():
+            if "layers." not in tensor_name:
+                # Map tensor name using the same method as working scripts
+                new_name = tensor_map.get_name(tensor_name, try_suffixes=(".weight", ".bias"))
+                if new_name is None:
+                    print(f"  Warning: Could not map tensor {tensor_name}")
+                    continue
+                
+                print(f"  Adding tensor: {tensor_name} -> {new_name}")
+                
+                # Convert to numpy and add like the working scripts
+                data = data_torch.squeeze().numpy()
+                writer.add_tensor(new_name, data)
+    
+    def get_tensors(self) -> Iterable[tuple[str, torch.Tensor]]:
+        """Get model tensors like the working scripts."""
+        # Check if using safetensors
+        is_safetensors = any(f.suffix == '.safetensors' for f in self.model_path.glob('*.safetensors'))
         
-        if "model.norm.weight" in self.model.state_dict():
-            print("  Adding output_norm.weight")
-            writer.add_tensor("output_norm.weight", self.model.state_dict()["model.norm.weight"].numpy())
+        if is_safetensors:
+            # Use safetensors like the working scripts
+            for f in self.model_path.glob('*.safetensors'):
+                with safe_open(f, framework="pt", device="cpu") as model_part:
+                    for name in model_part.keys():
+                        data = model_part.get_tensor(name)
+                        yield name, data
         else:
-            print("  Warning: model.norm.weight not found")
-        
-        if "lm_head.weight" in self.model.state_dict():
-            print("  Adding output.weight")
-            writer.add_tensor("output.weight", self.model.state_dict()["lm_head.weight"].numpy())
-        else:
-            print("  Warning: lm_head.weight not found")
+            # Use regular torch loading like the working scripts
+            for f in self.model_path.glob('*.bin'):
+                model_part = torch.load(f, map_location="cpu", mmap=True, weights_only=True)
+                for name, data in model_part.items():
+                    yield name, data
 
 def main():
     parser = argparse.ArgumentParser(description="Convert Qwen2.5 models to GGUF format for BitNet LUT inference")
