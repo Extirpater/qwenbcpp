@@ -247,8 +247,22 @@ class Qwen25Converter:
                     
                     print(f"  Adding tensor: {tensor_name} -> {new_name}")
                     
+                    # Convert data type and to numpy like the working scripts
+                    old_dtype = data_torch.dtype
+                    
+                    # Convert any unsupported data types to float32 like the working scripts
+                    if data_torch.dtype not in (torch.float16, torch.float32):
+                        data_torch = data_torch.to(torch.float32)
+                    
                     # Convert to numpy and add like the working scripts
                     data = data_torch.squeeze().numpy()
+                    
+                    # Handle data type conversion like the working scripts
+                    if data.dtype == np.float16:
+                        # Convert float16 to float32 for compatibility
+                        data = data.astype(np.float32)
+                    
+                    print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
                     writer.add_tensor(new_name, data)
         
         # Add embedding and output layers
@@ -264,8 +278,22 @@ class Qwen25Converter:
                 
                 print(f"  Adding tensor: {tensor_name} -> {new_name}")
                 
+                # Convert data type and to numpy like the working scripts
+                old_dtype = data_torch.dtype
+                
+                # Convert any unsupported data types to float32 like the working scripts
+                if data_torch.dtype not in (torch.float16, torch.float32):
+                    data_torch = data_torch.to(torch.float32)
+                
                 # Convert to numpy and add like the working scripts
                 data = data_torch.squeeze().numpy()
+                
+                # Handle data type conversion like the working scripts
+                if data.dtype == np.float16:
+                    # Convert float16 to float32 for compatibility
+                    data = data.astype(np.float32)
+                
+                print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
                 writer.add_tensor(new_name, data)
     
     def get_tensors(self) -> Iterable[tuple[str, torch.Tensor]]:
