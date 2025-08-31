@@ -179,7 +179,10 @@ static bool is_type_supported(enum ggml_type type) {{
         return false;
     }}
 }}
+
+#ifdef __ARM_NEON
 #include <arm_neon.h>
+#endif
 
 #define BM3200_8640 160
 #define BBK3200_8640 64
@@ -297,7 +300,10 @@ int32_t qgemm_lut_3200_8640(void* A, void* LUT, void* Scales, void* LUT_Scales, 
     }
   return 0;
 };
+
+#ifdef __ARM_NEON
 #include <arm_neon.h>
+#endif
 
 #define BM3200_3200 320
 #define BBK3200_3200 128
@@ -431,7 +437,10 @@ int32_t qgemm_lut_3200_3200(void* A, void* LUT, void* Scales, void* LUT_Scales, 
     }
   return 0;
 };
+
+#ifdef __ARM_NEON
 #include <arm_neon.h>
+#endif
 
 #define BM8640_3200 320
 #define BBK8640_3200 64

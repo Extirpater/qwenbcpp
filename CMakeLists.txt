@@ -15,6 +15,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 option(BITNET_ARM_TL1    "bitnet.cpp: use tl1 on arm platform"    OFF)
 option(BITNET_X86_TL2    "bitnet.cpp: use tl2 on x86 platform"    OFF)
 
+# Auto-detect architecture and set appropriate options
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
+    set(BITNET_ARM_TL1 ON CACHE BOOL "bitnet.cpp: use tl1 on arm platform" FORCE)
+    message(STATUS "Detected ARM64 architecture, enabling BITNET_ARM_TL1")
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+    set(BITNET_X86_TL2 ON CACHE BOOL "bitnet.cpp: use tl2 on x86 platform" FORCE)
+    message(STATUS "Detected x86_64 architecture, enabling BITNET_X86_TL2")
+endif()
+
 
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 set(CMAKE_C_STANDARD 11)
