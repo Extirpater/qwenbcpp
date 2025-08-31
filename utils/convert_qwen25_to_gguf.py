@@ -233,10 +233,9 @@ class Qwen25Converter:
         sp = spm.SentencePieceProcessor()
         sp.load(str(vocab_path))
         
-        # Add vocabulary size
+        # Note: vocabulary size will be set in main conversion function
         vocab_size = sp.vocab_size()
-        print(f"Setting vocabulary size: {vocab_size}")
-        writer.add_vocab_size(vocab_size)
+        print(f"Tokenizers vocabulary size: {vocab_size}")
         
         # Add tokens, scores, and types
         tokens = []
@@ -275,10 +274,9 @@ class Qwen25Converter:
         with open(vocab_path, 'r') as f:
             vocab = json.load(f)
         
-        # Add vocabulary size
+        # Note: vocabulary size will be set in main conversion function
         vocab_size = len(vocab)
-        print(f"Setting vocabulary size: {vocab_size}")
-        writer.add_vocab_size(vocab_size)
+        print(f"Tokenizers vocabulary size: {vocab_size}")
         
         # Add tokens, scores, and types
         tokens = []
