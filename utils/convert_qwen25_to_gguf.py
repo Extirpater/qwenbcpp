@@ -153,14 +153,17 @@ class Qwen25Converter:
         # Add tokenizer merges for BPE tokenizers (required for Qwen)
         self.add_tokenizer_merges(writer)
         
-        # Get actual vocabulary size from embedding tensor dimensions
+        # Get actual vocabulary size from embedding tensor dimensions for verification
         actual_vocab_size = self.get_actual_vocab_size()
         if actual_vocab_size:
             print(f"Model embedding tensor indicates vocabulary size: {actual_vocab_size}")
             print(f"Tokenizers vocabulary size: 151643")
-            print(f"Using actual model vocabulary size ({actual_vocab_size}) to match tensor dimensions")
-            # Update the vocabulary size to match the actual model
-            writer.add_vocab_size(actual_vocab_size)
+            print(f"Using tokenizer vocabulary size (151643) - model will be padded automatically")
+        
+        # Set vocabulary size to match tokenizer (this is what matters for GGUF)
+        writer.add_vocab_size(151643)
+            
+
         
         # Write tensors like the working scripts
         self.write_tensors(writer)
