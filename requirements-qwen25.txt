@@ -1,0 +1,8 @@
+# Requirements for Qwen2.5 conversion and inference
+torch>=2.0.0
+transformers>=4.36.0
+safetensors>=0.4.0
+numpy>=1.24.0
+sentencepiece>=0.1.99
+accelerate>=0.20.0
+huggingface-hub>=0.17.0
