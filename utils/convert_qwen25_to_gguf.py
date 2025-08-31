@@ -23,9 +23,10 @@ import gguf
 class Qwen25Converter:
     """Convert Qwen2.5 models to GGUF format following the same pattern as working BitNet scripts."""
     
-    def __init__(self, model_path: str, output_path: str):
+    def __init__(self, model_path: str, output_path: str, quant_type: str = "f16"):
         self.model_path = Path(model_path)
         self.output_path = Path(output_path)
+        self.quant_type = quant_type
         self.model = None
         self.tokenizer = None
         self.config = None
@@ -66,6 +67,26 @@ class Qwen25Converter:
         config["architectures"] = ["Qwen2ForCausalLM"]
         
         return config
+    
+    def transform_to_tl1(self, x: np.ndarray):
+        """Transform weights to TL1 format (2-bit quantization)."""
+        scale = np.max(np.abs(x))
+        if scale == 0:
+            scale = 1.0
+        # Quantize to 2-bit (-1, 0, 1) and scale
+        res = np.round(x / scale).astype(np.int8)
+        res = np.clip(res, -1, 1)
+        return res, scale.astype(np.float32)
+    
+    def transform_to_tl2(self, x: np.ndarray):
+        """Transform weights to TL2 format (2-bit quantization)."""
+        scale = np.max(np.abs(x))
+        if scale == 0:
+            scale = 1.0
+        # Quantize to 2-bit (-1, 0, 1) and scale
+        res = np.round(x / scale).astype(np.int8)
+        res = np.clip(res, -1, 1)
+        return res, scale.astype(np.float32)
     
     def convert_model(self):
         """Convert the model to GGUF format."""
@@ -262,7 +283,27 @@ class Qwen25Converter:
                         # Convert float16 to float32 for compatibility
                         data = data.astype(np.float32)
                     
-                    print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
+                    # Apply TL1/TL2 quantization if requested
+                    if self.quant_type in ["tl1", "tl2"] and name.endswith(".weight") and len(data.shape) >= 2:
+                        # Skip certain tensors that shouldn't be quantized
+                        if not any(name.endswith(skip) for skip in ["norm.weight", "embed_tokens.weight", "lm_head.weight"]):
+                            if self.quant_type == "tl1":
+                                data, scale = self.transform_to_tl1(data)
+                                print(f"    TL1 quantized: {old_dtype} -> {data.dtype}, scale: {scale}, shape: {data.shape}")
+                                # Add scale tensor
+                                scale_name = new_name + "_scale"
+                                writer.add_tensor(scale_name, scale)
+                            elif self.quant_type == "tl2":
+                                data, scale = self.transform_to_tl2(data)
+                                print(f"    TL2 quantized: {old_dtype} -> {data.dtype}, scale: {scale}, shape: {data.shape}")
+                                # Add scale tensor
+                                scale_name = new_name + "_scale"
+                                writer.add_tensor(scale_name, scale)
+                        else:
+                            print(f"    Skipping quantization for {new_name} (norm/embed/lm_head)")
+                    else:
+                        print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
+                    
                     writer.add_tensor(new_name, data)
         
         # Add embedding and output layers
@@ -293,7 +334,27 @@ class Qwen25Converter:
                     # Convert float16 to float32 for compatibility
                     data = data.astype(np.float32)
                 
-                print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
+                # Apply TL1/TL2 quantization if requested
+                if self.quant_type in ["tl1", "tl2"] and name.endswith(".weight") and len(data.shape) >= 2:
+                    # Skip certain tensors that shouldn't be quantized
+                    if not any(name.endswith(skip) for skip in ["norm.weight", "embed_tokens.weight", "lm_head.weight"]):
+                        if self.quant_type == "tl1":
+                            data, scale = self.transform_to_tl1(data)
+                            print(f"    TL1 quantized: {old_dtype} -> {data.dtype}, scale: {scale}, shape: {data.shape}")
+                            # Add scale tensor
+                            scale_name = new_name + "_scale"
+                            writer.add_tensor(scale_name, scale)
+                        elif self.quant_type == "tl2":
+                            data, scale = self.transform_to_tl2(data)
+                            print(f"    TL2 quantized: {old_dtype} -> {data.dtype}, scale: {scale}, shape: {data.shape}")
+                            # Add scale tensor
+                            scale_name = new_name + "_scale"
+                            writer.add_tensor(scale_name, scale)
+                    else:
+                        print(f"    Skipping quantization for {new_name} (norm/embed/lm_head)")
+                else:
+                    print(f"    Data type: {old_dtype} -> {data.dtype}, shape: {data.shape}")
+                
                 writer.add_tensor(new_name, data)
     
     def get_tensors(self) -> Iterable[tuple[str, torch.Tensor]]:
@@ -319,6 +380,7 @@ def main():
     parser = argparse.ArgumentParser(description="Convert Qwen2.5 models to GGUF format for BitNet LUT inference")
     parser.add_argument("model_path", help="Path to the Qwen2.5 model directory")
     parser.add_argument("--output", "-o", default="qwen25-bitnet.gguf", help="Output GGUF file path")
+    parser.add_argument("--quant-type", default="f16", choices=["f16", "tl1", "tl2"], help="Quantization type")
     
     args = parser.parse_args()
     
@@ -327,7 +389,7 @@ def main():
         sys.exit(1)
     
     # Create converter and run conversion
-    converter = Qwen25Converter(args.model_path, args.output)
+    converter = Qwen25Converter(args.model_path, args.output, args.quant_type)
     converter.load_model()
     converter.convert_model()
 
