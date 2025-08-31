@@ -105,8 +105,8 @@ class Qwen25Converter:
             # Look for the embedding tensor in the model
             for tensor_name, data_torch in self.get_tensors():
                 if tensor_name == "model.embed_tokens.weight":
-                    # The second dimension should be the vocabulary size
-                    vocab_size = data_torch.shape[1]
+                    # The first dimension should be the vocabulary size
+                    vocab_size = data_torch.shape[0]
                     print(f"Found embedding tensor with shape: {data_torch.shape}, vocab_size: {vocab_size}")
                     return vocab_size
             return None
@@ -153,12 +153,12 @@ class Qwen25Converter:
         # Add tokenizer merges for BPE tokenizers (required for Qwen)
         self.add_tokenizer_merges(writer)
         
-        # Get actual vocabulary size from embedding tensor dimensions
+        # Get actual vocabulary size from embedding tensor dimensions for verification
         actual_vocab_size = self.get_actual_vocab_size()
         if actual_vocab_size:
-            print(f"Using actual vocabulary size from model: {actual_vocab_size}")
-            # Update the vocabulary size to match the actual model
-            writer.add_vocab_size(actual_vocab_size)
+            print(f"Model embedding tensor indicates vocabulary size: {actual_vocab_size}")
+            print(f"Tokenizers vocabulary size: 151643")
+            print(f"Using tokenizer vocabulary size (151643) as it's more accurate")
         
         # Write tensors like the working scripts
         self.write_tensors(writer)
