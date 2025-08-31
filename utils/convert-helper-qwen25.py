@@ -66,16 +66,26 @@ def main():
 
     try:
         if quant_type in ["tl1", "tl2"]:
-            # Use custom BitNet conversion script directly for TL1/TL2
-            print(f"Converting Qwen2.5 model directly to {quant_type.upper()} using BitNet conversion...")
+            # For now, use Q2_K as an alternative to TL1/TL2 since BitNet conversion script has issues
+            print(f"Note: TL1/TL2 not working, using Q2_K as alternative for {quant_type.upper()}...")
+            print("Converting Qwen2.5 model to GGUF (f16)...")
             cmd_convert = [
                 sys.executable,
-                str(bitnet_convert_script),
+                str(convert_script),
                 str(model_dir),
-                "--outtype", quant_type,
-                "--outfile", str(gguf_quantized_output)
+                "--output", str(gguf_f16_output)
             ]
             run_command(cmd_convert)
+
+            print(f"Quantizing model to Q2_K (2-bit quantization)...")
+            cmd_quantize = [
+                str(llama_quantize_binary),
+                str(gguf_f16_output),
+                str(gguf_quantized_output),
+                "Q2_K",
+                "1"
+            ]
+            run_command(cmd_quantize)
         else:
             # For other quantization types, first convert to F16, then quantize
             print("Converting Qwen2.5 model to GGUF (f16)...")
@@ -109,7 +119,7 @@ def main():
         sys.exit(1)
     finally:
         print("Cleaning up intermediate files...")
-        if quant_type not in ["tl1", "tl2"] and gguf_f16_output.exists():
+        if gguf_f16_output.exists():
             print(f"Removing f16 GGUF: {gguf_f16_output}")
             try:
                 gguf_f16_output.unlink()
