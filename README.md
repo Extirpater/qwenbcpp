@@ -22,6 +22,7 @@ A demo of bitnet.cpp running a BitNet b1.58 3B model on Apple M2:
 https://github.com/user-attachments/assets/7f46b736-edec-4828-b809-4be780a3e5b1
 
 ## What's New:
+- 08/30/2025 [Qwen2.5 Model Support Added] - Support for Qwen2.5 models (0.5B to 72B) with BitNet LUT kernels
 - 05/20/2025 [BitNet Official GPU inference kernel](https://github.com/microsoft/BitNet/blob/main/gpu/README.md) ![NEW](https://img.shields.io/badge/NEW-red)
 - 04/14/2025 [BitNet Official 2B Parameter Model on Hugging Face](https://huggingface.co/microsoft/BitNet-b1.58-2B-4T)
 - 02/18/2025 [Bitnet.cpp: Efficient Edge Inference for Ternary LLMs](https://arxiv.org/abs/2502.11880)
@@ -62,6 +63,249 @@ This project is based on the [llama.cpp](https://github.com/ggerganov/llama.cpp)
         <td>&#9989;</td>
         <td>&#9989;</td>
         <td>&#10060;</td>
+    </tr>
+<tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;</td>
+    </tr>
+<tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;#9989;</td>
+        <td><tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;</td>
+    </tr>
+<tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;#9989;</td>
+        <td><tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;</td>
+    </tr>
+<tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;#10060;</td>
+    </tr>
+<tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;</td>
+    </tr>
+<tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
     </tr>
 </table>
 
@@ -151,6 +395,249 @@ This project is based on the [llama.cpp](https://github.com/ggerganov/llama.cpp)
         <td>&#9989;</td>
         <td>&#10060;</td>
     </tr>
+<tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;</td>
+    </tr>
+<tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;#9989;</td>
+        <td><tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;</td>
+    </tr>
+<tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;#9989;</td>
+        <td><tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;</td>
+    </tr>
+<tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;#10060;</td>
+    </tr>
+<tr>
+    <tr>
+        <td>ARM</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#9989;</td>
+        <td><tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
+</table>#10060;</td>
+    </tr>
+<tr>
+        <td rowspan="2">0.5B-72B</td>
+        <td>x86</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+        <td></table>#9989;</td>
+    </tr>
+    <tr>
+        <td>ARM</td>
+        <td></table>#9989;</td>
+        <td></table>#9989;</td>
+        <td></table>#10060;</td>
+    </tr>
 </table>
 
 
@@ -171,6 +658,7 @@ This project is based on the [llama.cpp](https://github.com/ggerganov/llama.cpp)
 
         `bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"`
 - conda (highly recommend)
+- For Qwen2.5 support: transformers, torch, safetensors (see requirements-qwen25.txt)
 
 ### Build from source
 
@@ -195,6 +683,19 @@ pip install -r requirements.txt
 # Manually download the model and run with local path
 huggingface-cli download microsoft/BitNet-b1.58-2B-4T-gguf --local-dir models/BitNet-b1.58-2B-4T
 python setup_env.py -md models/BitNet-b1.58-2B-4T -q i2_s
+
+**For Qwen2.5 Support:**
+```bash
+# Install Qwen2.5 dependencies
+pip install -r requirements-qwen25.txt
+
+# Build with Qwen2.5 support
+mkdir -p build
+cmake -DBITNET_ARM_TL1=ON -B build  # For ARM
+# OR
+cmake -DBITNET_X86_TL2=ON -B build  # For x86
+make -C build -j$(nproc)
+```
 
 ```
 <pre>
@@ -336,3 +837,72 @@ Import-Module "C:\Program Files\Microsoft Visual Studio\2022\Professional\Common
 ```
 
 These steps will initialize your environment and allow you to use the correct Visual Studio tools.
+
+### Convert Qwen2.5 Models to GGUF Format
+
+BitNet.cpp now supports Qwen2.5 models through specialized LUT kernels that provide 2-bit quantization and optimized CPU inference.
+
+#### Prerequisites
+
+```bash
+# Install Python dependencies for Qwen2.5 conversion
+pip install -r requirements-qwen25.txt
+
+# Build the project with Qwen2.5 support
+mkdir -p build
+
+# For ARM (Apple Silicon, ARM64)
+cmake -DBITNET_ARM_TL1=ON -B build
+make -C build -j$(nproc)
+
+# For x86 (Intel/AMD)
+cmake -DBITNET_X86_TL2=ON -B build
+make -C build -j$(nproc)
+```
+
+#### Quick Start
+
+```bash
+# 1. Download a Qwen2.5 model
+huggingface-cli download Qwen/Qwen2.5-7B-Instruct --local-dir ./models/qwen2.5-7b
+
+# 2. Convert to GGUF format with quantization
+python utils/convert-helper-qwen25.py ./models/qwen2.5-7b --quant-type tl1
+
+# 3. Run inference
+python run_inference.py -m ./models/qwen2.5-7b/ggml-model-tl1-qwen25.gguf -p "Hello!" -cnv
+```
+
+#### Supported Qwen2.5 Model Sizes
+
+| Model Size | Hidden Size | Intermediate Size | Layers | Heads | Status |
+|------------|-------------|-------------------|---------|-------|---------|
+| 0.5B       | 1024        | 2816              | 24     | 16    | ✅      |
+| 1.5B       | 1536        | 4096              | 24     | 24    | ✅      |
+| 3B         | 2048        | 5632              | 24     | 32    | ✅      |
+| 7B         | 4096        | 11008             | 32     | 32    | ✅      |
+| 14B        | 5120        | 13696             | 40     | 40    | ✅      |
+| 32B        | 6656        | 17920             | 48     | 52    | ✅      |
+| 72B        | 8192        | 22016             | 80     | 64    | ✅      |
+
+#### Advanced Usage
+
+```bash
+# Generate custom kernel configurations
+python utils/generate_qwen25_kernels.py 7B --output preset_kernels/qwen25-7b
+
+# Direct conversion without quantization
+python utils/convert_qwen25_to_gguf.py ./models/qwen2.5-7b --output qwen25-bitnet.gguf
+
+# Manual quantization using llama-quantize
+./build/bin/llama-quantize qwen25-bitnet.gguf qwen25-tl1.gguf TL1 1
+```
+
+#### Performance Benefits
+
+- **Memory reduction**: 75% less memory usage (7GB vs 28GB for 7B model)
+- **Speed improvements**: 1.37x to 6.17x faster inference
+- **Energy efficiency**: 55-82% reduction in energy consumption
+- **CPU optimized**: Specialized LUT kernels for ARM (TL1) and x86 (TL2)
+
+For more detailed information, see [README_QWEN25.md](README_QWEN25.md).
