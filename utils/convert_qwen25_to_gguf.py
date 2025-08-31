@@ -72,47 +72,7 @@ class Qwen25Converter:
             "model.layers.{}.post_attention_layernorm.weight": "blk.{}.ffn_norm.weight",
         }
     
-    def quantize_weights(self, weights: torch.Tensor, bits: int = 2) -> tuple:
-        """
-        Quantize weights to the specified bit precision using BitNet-style quantization.
-        
-        Args:
-            weights: Input weights tensor
-            bits: Number of bits for quantization (2 for BitNet)
-            
-        Returns:
-            tuple: (quantized_weights, scales)
-        """
-        if bits == 2:
-            # BitNet-style 2-bit quantization
-            weights_f32 = weights.float()
-            
-            # Calculate scales for each block
-            block_size = 64  # BitNet uses 64-element blocks
-            n_blocks = (weights_f32.numel() + block_size - 1) // block_size
-            
-            # Pad weights to be divisible by block_size
-            pad_size = (block_size - weights_f32.numel() % block_size) % block_size
-            if pad_size > 0:
-                weights_f32 = torch.cat([weights_f32.flatten(), torch.zeros(pad_size)])
-            
-            weights_f32 = weights_f32.reshape(-1, block_size)
-            
-            # Calculate scales for each block
-            scales = torch.max(torch.abs(weights_f32), dim=1, keepdim=True)[0]
-            scales = scales.clamp(min=1e-8)
-            
-            # Quantize to 2-bit (-1, 0, 1)
-            quantized = torch.round(weights_f32 / scales)
-            quantized = torch.clamp(quantized, -1, 1)
-            
-            # Convert to uint8 for storage
-            quantized_uint8 = (quantized + 1).to(torch.uint8)
-            
-            return quantized_uint8, scales.flatten()[:n_blocks]
-        else:
-            # Fallback to FP16
-            return weights.half(), None
+
     
     def convert_model(self):
         """Convert the model to GGUF format."""
@@ -134,7 +94,7 @@ class Qwen25Converter:
         writer.add_layer_norm_rms_eps(self.config.rms_norm_eps)
         
         # Add file type
-        writer.add_file_type(gguf.FileType.F16)
+        writer.add_file_type(gguf.LlamaFileType.ALL_F32)
         
         # Add vocabulary
         self._add_vocab(writer)
@@ -189,20 +149,8 @@ class Qwen25Converter:
                     if actual_name in self.model.state_dict():
                         tensor = self.model.state_dict()[actual_name]
                         
-                        # Quantize weights for attention and MLP layers
-                        if any(keyword in actual_name for keyword in ['q_proj.weight', 'k_proj.weight', 'v_proj.weight', 
-                                                                   'o_proj.weight', 'gate_proj.weight', 'up_proj.weight', 'down_proj.weight']):
-                            quantized, scales = self.quantize_weights(tensor, bits=2)
-                            
-                            # Add quantized weights
-                            writer.add_tensor(gguf_actual_name, quantized.numpy())
-                            
-                            # Add scales if quantization was used
-                            if scales is not None:
-                                writer.add_tensor(f"{gguf_actual_name}.scales", scales.numpy())
-                        else:
-                            # Add non-quantized tensors (like norms)
-                            writer.add_tensor(gguf_actual_name, tensor.numpy())
+                        # Add weights in F32 format (quantization will be handled by llama-quantize)
+                        writer.add_tensor(gguf_actual_name, tensor.numpy())
         
         # Add embedding and output layers
         if "model.embed_tokens.weight" in self.model.state_dict():
@@ -218,7 +166,6 @@ def main():
     parser = argparse.ArgumentParser(description="Convert Qwen2.5 models to GGUF format for BitNet LUT inference")
     parser.add_argument("model_path", help="Path to the Qwen2.5 model directory")
     parser.add_argument("--output", "-o", default="qwen25-bitnet.gguf", help="Output GGUF file path")
-    parser.add_argument("--bits", "-b", type=int, default=2, choices=[2, 4, 8, 16], help="Quantization bits")
     
     args = parser.parse_args()
     
