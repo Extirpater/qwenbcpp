@@ -65,27 +65,28 @@ def main():
     gguf_quantized_output = model_dir / f"ggml-model-{quant_type}-qwen25.gguf"
 
     try:
-        print("Converting Qwen2.5 model to GGUF (f16)...")
-        cmd_convert = [
-            sys.executable,
-            str(convert_script),
-            str(model_dir),
-            "--output", str(gguf_f16_output)
-        ]
-        run_command(cmd_convert)
-
         if quant_type in ["tl1", "tl2"]:
-            # Use custom BitNet conversion script for TL1/TL2
-            print(f"Quantizing model to {quant_type.upper()} using BitNet conversion...")
-            cmd_quantize = [
+            # Use custom BitNet conversion script directly for TL1/TL2
+            print(f"Converting Qwen2.5 model directly to {quant_type.upper()} using BitNet conversion...")
+            cmd_convert = [
                 sys.executable,
                 str(bitnet_convert_script),
                 str(model_dir),
                 "--outtype", quant_type,
                 "--outfile", str(gguf_quantized_output)
             ]
+            run_command(cmd_convert)
         else:
-            # Use standard llama-quantize for other quantization types
+            # For other quantization types, first convert to F16, then quantize
+            print("Converting Qwen2.5 model to GGUF (f16)...")
+            cmd_convert = [
+                sys.executable,
+                str(convert_script),
+                str(model_dir),
+                "--output", str(gguf_f16_output)
+            ]
+            run_command(cmd_convert)
+
             print(f"Quantizing model to {quant_type.upper()}...")
             cmd_quantize = [
                 str(llama_quantize_binary),
@@ -94,17 +95,21 @@ def main():
                 quant_type.upper(),
                 "1"
             ]
+            run_command(cmd_quantize)
 
         print("Conversion completed successfully!")
-        print(f"F16 model: {gguf_f16_output}")
-        print(f"Quantized model: {gguf_quantized_output}")
+        if quant_type in ["tl1", "tl2"]:
+            print(f"Quantized model: {gguf_quantized_output}")
+        else:
+            print(f"F16 model: {gguf_f16_output}")
+            print(f"Quantized model: {gguf_quantized_output}")
 
     except Exception as e:
         print(f"An error occurred: {e}")
         sys.exit(1)
     finally:
         print("Cleaning up intermediate files...")
-        if gguf_f16_output.exists():
+        if quant_type not in ["tl1", "tl2"] and gguf_f16_output.exists():
             print(f"Removing f16 GGUF: {gguf_f16_output}")
             try:
                 gguf_f16_output.unlink()
